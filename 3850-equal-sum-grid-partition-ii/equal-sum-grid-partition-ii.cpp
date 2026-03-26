@@ -1,59 +1,82 @@
 class Solution {
 public:
     typedef long long ll;
-    bool solve(vector<vector<int>>&grid){
-        int n=grid.size(),m=grid[0].size();
-        ll bottomSum=0,topSum=0;
-        vector<int>bottomFreq(100001,0),topFreq(100001,0);
-        for(int i=0;i<n;i++){
-            for(int j=0;j<m;j++){
-                bottomSum+=grid[i][j];
-                bottomFreq[grid[i][j]]++;
+
+    bool solve(vector<vector<int>>& grid){
+        int m = grid.size(), n = grid[0].size();
+
+        unordered_map<int,int> bmp, tmp;
+        ll bsum = 0, tsum = 0;
+
+        // Step 1: total sum + bottom freq
+        for(int i = 0; i < m; i++){
+            for(int j = 0; j < n; j++){
+                bsum += grid[i][j];
+                bmp[grid[i][j]]++;
             }
         }
-        for(int i=0;i<n-1;i++){
-           for(int j=0;j<m;j++){
-                bottomSum-=grid[i][j];
-                bottomFreq[grid[i][j]]--;
-                topSum+=grid[i][j];
-                topFreq[grid[i][j]]++;
-           }
-           if(topSum==bottomSum)return true;
-           ll diffTop=topSum-bottomSum;
-           if(diffTop>0 && diffTop<=100000){
-              int h=i+1,w=m;
-              if(h>1 && w>1){
-                if(topFreq[diffTop])return true;
-                }
-                else if(h>1 && w==1){
-                    if(grid[0][0]==diffTop || grid[i][0]==diffTop)return true;
-                }else if(h==1 && w>1){
-                    if(grid[0][0]==diffTop || grid[0][w-1]==diffTop)return true;
-                }
-           }
-           ll diffBot=bottomSum-topSum;
-           if(diffBot>0 && diffBot<=100000){
-            int h=(n-i-1),w=m;
-            if(h>1 && w>1){
-                if(bottomFreq[diffBot])return true;
-            }else if(h>1 && w==1){
-                if(grid[i+1][0]==diffBot || grid[n-1][0]==diffBot)return true;
-            }else if(h==1 && w>1){
-                if(grid[n-1][0]==diffBot || grid[n-1][w-1]==diffBot)return true;
+
+        // Step 2: move row by row
+        for(int i = 0; i < m - 1; i++){
+            for(int j = 0; j < n; j++){
+                bsum -= grid[i][j];
+                bmp[grid[i][j]]--;
+
+                tsum += grid[i][j];
+                tmp[grid[i][j]]++;
             }
-           }
+
+            // Case 1: equal
+            if(tsum == bsum) return true;
+
+            // Case 2: remove from top
+            ll tdiff = tsum - bsum;
+            if(tdiff > 0 && tdiff <= 100000){
+                int h = i + 1, w = n;
+
+                if(h > 1 && w > 1){
+                    if(tmp[tdiff] > 0) return true;
+                }
+                else if(h > 1 && w == 1){
+                    if(grid[0][0] == tdiff || grid[i][0] == tdiff) return true;
+                }
+                else if(h == 1 && w > 1){
+                    if(grid[0][0] == tdiff || grid[0][n-1] == tdiff) return true;
+                }
+            }
+
+            // Case 3: remove from bottom
+            ll bdiff = bsum - tsum;
+            if(bdiff > 0){
+                int h = m - i - 1, w = n;
+
+                if(h > 1 && w > 1){
+                    if(bmp[bdiff] > 0 && bdiff <= 100000) return true;
+                }
+                else if(h > 1 && w == 1){
+                    if(grid[i+1][0] == bdiff || grid[m-1][0] == bdiff) return true;
+                }
+                else if(h == 1 && w > 1){
+                    if(grid[m-1][0] == bdiff || grid[m-1][n-1] == bdiff) return true;
+                }
+            }
         }
+
         return false;
     }
+
     bool canPartitionGrid(vector<vector<int>>& grid) {
-        if(solve(grid))return true;
-        int n=grid.size(),m=grid[0].size();
-        vector<vector<int>>mat(m,vector<int>(n));
-        for(int i=0;i<n;i++){
-            for(int j=0;j<m;j++){
-                mat[j][i]=grid[i][j];
+        if(solve(grid)) return true;
+
+        int n = grid.size(), m = grid[0].size();
+        vector<vector<int>> mat(m, vector<int>(n));
+
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                mat[j][i] = grid[i][j];
             }
         }
+
         return solve(mat);
     }
 };
